@@ -1,5 +1,4 @@
-const API_KEY = 'f2525b9d0ba778bd12445f809d29eaca';
-const API_URL = 'https://api.themoviedb.org/3/movie/now_playing';
+const API_URL = '/api/now-playing';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const movieGrid = document.getElementById('movie-grid');
@@ -8,9 +7,7 @@ const errorEl = document.getElementById('error');
 const header = document.querySelector('.header');
 
 async function fetchNowPlayingMovies() {
-  const url = `${API_URL}?api_key=${API_KEY}&language=ko-KR&page=1`;
-
-  const response = await fetch(url);
+  const response = await fetch(API_URL);
 
   if (!response.ok) {
     throw new Error(`API 요청 실패: ${response.status}`);
