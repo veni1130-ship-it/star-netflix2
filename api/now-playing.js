@@ -13,6 +13,8 @@ module.exports = async (req, res) => {
     const response = await fetch(url);
     const data = await response.json();
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
     return res.status(response.status).json(data);
   } catch (error) {

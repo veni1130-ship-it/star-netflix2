@@ -1,20 +1,55 @@
-const API_URL = '/api/now-playing';
+const LOCAL_BACKEND = 'http://localhost:3000';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
 const movieGrid = document.getElementById('movie-grid');
 const loadingEl = document.getElementById('loading');
 const errorEl = document.getElementById('error');
+const errorMessageEl = document.getElementById('error-message');
 const header = document.querySelector('.header');
 
-async function fetchNowPlayingMovies() {
-  const response = await fetch(API_URL);
+function getApiEndpoints() {
+  const relative = '/api/now-playing';
+  const local = `${LOCAL_BACKEND}/api/now-playing`;
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`);
+  const servedByBackend =
+    window.location.port === '3000' ||
+    window.location.hostname.includes('vercel.app') ||
+    window.location.hostname.includes('netlify.app');
+
+  if (servedByBackend) {
+    return [relative];
   }
 
-  const data = await response.json();
-  return data.results;
+  return [local, relative];
+}
+
+async function fetchNowPlayingMovies() {
+  const endpoints = getApiEndpoints();
+  let lastError = null;
+
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        lastError = new Error(`API 요청 실패: ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data.results)) {
+        lastError = new Error(data.error || '영화 목록 형식이 올바르지 않습니다.');
+        continue;
+      }
+
+      return data.results;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('API 요청 실패');
 }
 
 function createMovieCard(movie) {
@@ -96,6 +131,21 @@ async function init() {
     console.error(err);
     movieGrid.innerHTML = '';
     setStatus('error');
+
+    const needsServer =
+      window.location.protocol === 'file:' ||
+      (window.location.port && window.location.port !== '3000');
+
+    if (needsServer && err instanceof TypeError) {
+      errorMessageEl.textContent =
+        '백엔드 서버에 연결할 수 없습니다. 터미널에서 npm start 실행 후 http://localhost:3000 으로 접속해 주세요.';
+    } else if (needsServer) {
+      errorMessageEl.textContent =
+        '영화 정보를 불러오지 못했습니다. npm start 로 서버를 실행했는지 확인해 주세요.';
+    } else {
+      errorMessageEl.textContent =
+        '영화 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    }
   }
 }
 
