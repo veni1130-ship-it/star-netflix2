@@ -2,9 +2,9 @@
   "name": "star-netflix2",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node local-server.js"
   },
-  "dependencies": {
+  "devDependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2"
   }
