@@ -32,7 +32,10 @@ async function fetchNowPlayingMovies() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        lastError = new Error(`API 요청 실패: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        lastError = new Error(
+          errorData.hint || errorData.error || `API 요청 실패: ${response.status}`
+        );
         continue;
       }
 
@@ -142,9 +145,11 @@ async function init() {
     } else if (needsServer) {
       errorMessageEl.textContent =
         '영화 정보를 불러오지 못했습니다. npm start 로 서버를 실행했는지 확인해 주세요.';
+    } else if (err.message.includes('TMDB_API_KEY') || err.message.includes('API key not configured')) {
+      errorMessageEl.textContent = err.message;
     } else {
       errorMessageEl.textContent =
-        '영화 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        err.message || '영화 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
     }
   }
 }
